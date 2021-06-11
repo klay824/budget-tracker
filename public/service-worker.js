@@ -7,14 +7,15 @@ const FILES_TO_CACHE = [
     "/manifest.webmanifest",
     "/styles.css",
     "/index.js",
-    "/icons/icon-192x192",
-    "/icons/icon-512x512"
+    "/db.js",
+    "/icons/icon-192x192.png",
+    "/icons/icon-512x512.png"
 ];
 
 // installs service worker
 self.addEventListener("install", function (evt) {
     evt.waitUntil(
-        caches.open(DATA_CACHE_NAME).then((cache) => cache.add("/api/transaction/bulk"))
+        caches.open(DATA_CACHE_NAME).then((cache) => cache.add("/api/transaction"))
     );
 
     evt.waitUntil(
@@ -45,17 +46,18 @@ self.addEventListener("activate", function (evt) {
 // fetch
 self.addEventListener("fetch", function (evt) {
     if (evt.request.url.includes("/api/")) {
+        console.log('[Service Worker] Fetch (data)', evt.request.url);
         evt.respondWith(
-            caches.open(DATA_CACHE_NAME).then(cache => {
+            caches.open(DATA_CACHE_NAME).then((cache) => {
                 return fetch(evt.request)
-                    .then(response => {
+                    .then((response) => {
                         if (response.status === 200) {
                             cache.put(evt.request.url, response.clone());
                         }
 
                         return response;
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         return cache.match(evt.request);
                     });
             }).catch(err => console.log(err))
@@ -65,8 +67,8 @@ self.addEventListener("fetch", function (evt) {
     }
 
     evt.respondWith(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.match(evt.request).then(response => {
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.match(evt.request).then((response) => {
                 return response || fetch(evt.request);
             });
         })
